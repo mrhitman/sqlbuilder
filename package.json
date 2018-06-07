@@ -1,5 +1,28 @@
 {
   "dependencies": {
-    "lodash": "^4.17.10"
-  }
+    "chai": "^4.1.2",
+    "lodash": "^4.17.10",
+    "mocha": "^5.2.0"
+  },
+  "name": "sqlbuilder",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrhitman/sqlbuilder.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mrhitman/sqlbuilder/issues"
+  },
+  "homepage": "https://github.com/mrhitman/sqlbuilder#readme",
+  "description": ""
 }
