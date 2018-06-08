@@ -2,13 +2,19 @@
 
 const _ = require("lodash");
 
+const types = {
+    select: 'SELECT',
+    update: 'UPDATE',
+    insert: 'INSERT',
+    delete: 'DELETE'
+};
 class Sql {
     constructor() {
         this._reset();
     }
 
     _reset() {
-        this._begin = '';
+        this._type = '';
         this._fields = '';
         this._values = '';
         this._tableName = '';
@@ -38,22 +44,21 @@ class Sql {
     }
 
     _prepareValues(data) {
-        switch (this._begin) {
-        case 'INSERT':
+        switch (this._type) {
+        case types.insert:
             return ` (${Object.keys(data).join()}) VALUES (${Object.values(data).join()})`;
-        case 'UPDATE':
-            const values = _.map(data, (value, key) => {
+        case types.update:
+            return ` SET ` + _.map(data, (value, key) => {
                 return `${key}=${value}`;
             });
-            return ` SET ${values}`;
         default:
-            throw new Error('Invalid sql type');
+            throw new Error(`Invalid sql type:${this._type}`);
         }
     }
 
     static select(fields, tableName) {
         const instance = new Sql();
-        instance._begin = 'SELECT';
+        instance._type = types.select;
         instance._fields = instance._prepareFields(fields);
         if (tableName) {
             return instance.table(tableName);
@@ -63,21 +68,21 @@ class Sql {
 
     static insert(tableName, data) {
         const instance = new Sql();
-        instance._begin = 'INSERT';
+        instance._type = types.insert;
         instance._values = instance._prepareValues(data);
         return instance.table(tableName);
     }
 
     static update(tableName, data) {
         const instance = new Sql();
-        instance._begin = 'UPDATE';
+        instance._type = types.update;
         instance._values = instance._prepareValues(data);
         return instance.table(tableName);
     }
 
     static delete(tableName) {
         const instance = new Sql();
-        instance._begin = 'DELETE';
+        instance._type = types.delete;
         return instance.table(tableName);
     }
 
@@ -93,34 +98,38 @@ class Sql {
 
     sql() {
         const sql = [];
-        switch (this._begin) {
-        case 'SELECT':
-            sql.push(`${this._begin} ${this._fields}`);
+        switch (this._type) {
+        case types.select:
+            sql.push(`${this._type} ${this._fields}`);
             sql.push(`FROM ${this._tableName}`);
             sql.push(this._condition);
             break;
-        case 'INSERT':
-            sql.push(`${this._begin} `);
+        case types.insert:
+            sql.push(`${this._type} `);
             sql.push(`INTO ${this._tableName}`);
             sql.push(this._values);
             break;
-        case 'UPDATE':
-            sql.push(`${this._begin} ${this._fields}`);
+        case types.update:
+            sql.push(`${this._type} ${this._fields}`);
             sql.push(`${this._tableName}`);
             sql.push(this._values);
             sql.push(this._condition);
             break;
-        case 'DELETE':
-            sql.push(`${this._begin} `);
+        case types.delete:
+            sql.push(`${this._type} `);
             sql.push(`FROM ${this._tableName}`);
             sql.push(this._condition);
             break;
         default:
-            throw new Error('Invalid sql type');
+            throw new Error(`Invalid sql type:${this._type}`);
         }
         sql.push(';');
         this._reset();
         return sql.join('');
+    }
+
+    toString() {
+        return this.sql();
     }
 }
 
