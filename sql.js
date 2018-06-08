@@ -9,8 +9,9 @@ const types = {
     delete: 'DELETE'
 };
 class Sql {
-    constructor() {
+    constructor(type) {
         this._reset();
+        this._type = type;
     }
 
     _reset() {
@@ -57,8 +58,7 @@ class Sql {
     }
 
     static select(fields, tableName) {
-        const instance = new Sql();
-        instance._type = types.select;
+        const instance = new Sql(types.select);
         instance._fields = instance._prepareFields(fields);
         if (tableName) {
             return instance.table(tableName);
@@ -67,22 +67,19 @@ class Sql {
     }
 
     static insert(tableName, data) {
-        const instance = new Sql();
-        instance._type = types.insert;
+        const instance = new Sql(types.insert);
         instance._values = instance._prepareValues(data);
         return instance.table(tableName);
     }
 
     static update(tableName, data) {
-        const instance = new Sql();
-        instance._type = types.update;
+        const instance = new Sql(types.update);
         instance._values = instance._prepareValues(data);
         return instance.table(tableName);
     }
 
     static delete(tableName) {
-        const instance = new Sql();
-        instance._type = types.delete;
+        const instance = new Sql(types.delete);
         return instance.table(tableName);
     }
 
