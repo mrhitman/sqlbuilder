@@ -52,11 +52,14 @@ describe('select', function() {
     });
 
     it('real', function() {
-        expect("SELECT raw_data FROM sso_service_lines WHERE (created_at > NOW() - INTERVAL '1 minute' OR updated_at > NOW() - INTERVAL '1 minute') AND portal_id = :portal_id`;")
+        expect("SELECT raw_data FROM sso_service_lines WHERE (portal_id=:portal_id AND (created_at > NOW() - INTERVAL '1 minute' OR updated_at > NOW() - INTERVAL '1 minute'));")
             .to.be
             .equal(sql.select('raw_data', 'sso_service_lines')
-                .where("(created_at > NOW() - INTERVAL '1 minute' OR updated_at > NOW() - INTERVAL '1 minute') AND portal_id = :portal_id`")
-                .sql());
+                .where(
+                    ['AND', 'portal_id=:portal_id',
+                        ['OR', "created_at > NOW() - INTERVAL '1 minute'", "updated_at > NOW() - INTERVAL '1 minute'"]
+                    ]
+                ).sql());
     });
 });
 
