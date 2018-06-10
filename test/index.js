@@ -34,6 +34,21 @@ describe('select', function() {
         expect('SELECT id, field1 FROM test WHERE id=:id;')
             .to.be
             .equal(sql.select(['id', 'field1'], 'test').where({id: ':id'}).sql());
+        expect('SELECT id, field1 FROM test WHERE id=:id AND name=:name;')
+            .to.be
+            .equal(sql.select(['id', 'field1'], 'test').where({id: ':id', name: ':name'}).sql());
+        expect('SELECT id, field1 FROM test WHERE NOT (id=:id);')
+            .to.be
+            .equal(sql.select(['id', 'field1'], 'test').where(['NOT',  'id=:id']).sql());
+        expect('SELECT id FROM test WHERE (id=1 OR id=2);')
+            .to.be
+            .equal(sql.select('id', 'test').where(['OR', 'id=1', 'id=2']).sql());
+        expect('SELECT id FROM test WHERE (id=1 OR (id=3 AND id=2));')
+            .to.be
+            .equal(sql.select('id', 'test').where(['OR', 'id=1', ['AND', 'id=3', 'id=2']]).sql());
+        expect('SELECT id FROM test WHERE (id=1 OR (id=3 OR id=2));')
+            .to.be
+            .equal(sql.select('id', 'test').where(['OR', 'id=1', ['OR', 'id=3', 'id=2']]).sql());
     });
 
     it('real', function() {

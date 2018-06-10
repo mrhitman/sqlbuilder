@@ -34,12 +34,23 @@ class Sql {
 
     _prepareCondition(condition) {
         if (typeof condition === 'string') {
-            return ` WHERE ${condition}`;
-        }
-        if (condition instanceof Object) {
-            return ` WHERE ${_.map(condition, (value, key) => {
-                return `${key}=${value}`;
-            }).join()}`;
+            return condition;
+        } else if (Array.isArray(condition)) {
+            const key = _.first(condition.splice(0, 1));
+            switch(key) {
+                case `OR`: 
+                    return `(` + _.map(condition, this._prepareCondition.bind(this)).join(` OR `) + `)`;
+                case `AND`: 
+                    return `(` + _.map(condition, this._prepareCondition.bind(this)).join(` AND `) + `)`;
+                case `NOT`: 
+                    return `NOT (${_.first(condition)})`;
+                default:
+                    throw new Error(`Ivalid sql: ${key}`)
+            }
+        } else if (condition instanceof Object) {
+            return _.map(condition, (value, key) => {
+                return `${key}=${this._prepareCondition(value)}`;
+            }).join(` AND `);
         }
         return ``;
     }
@@ -89,7 +100,7 @@ class Sql {
     }
 
     where(condition) {
-        this._condition = this._prepareCondition(condition);
+        this._condition = ` WHERE ${this._prepareCondition(condition)}`;
         return this;
     }
 
