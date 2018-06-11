@@ -2,24 +2,39 @@
 
 const _ = require("lodash");
 
-const types = {
-    select: 'SELECT',
-    update: 'UPDATE',
-    insert: 'INSERT',
-    delete: 'DELETE'
-};
 class Sql {
-    constructor(type) {
+    constructor() {
         this._reset();
-        this._type = type;
     }
 
     _reset() {
-        this._type = '';
         this._fields = '';
-        this._values = '';
         this._tableName = '';
+        this._values = '';
         this._condition = '';
+    }
+
+    _prepareCondition(condition) {
+        if (typeof condition === 'string') {
+            return condition;
+        } else if (Array.isArray(condition)) {
+            const key = _.first(condition.splice(0, 1));
+            switch (key) {
+            case `OR`:
+                return `(` + _.map(condition, this._prepareCondition.bind(this)).join(` OR `) + `)`;
+            case `AND`:
+                return `(` + _.map(condition, this._prepareCondition.bind(this)).join(` AND `) + `)`;
+            case `NOT`:
+                return `NOT (${_.first(condition)})`;
+            default:
+                throw new Error(`Ivalid sql: ${key}`);
+            }
+        } else if (condition instanceof Object) {
+            return _.map(condition, (value, key) => {
+                return `${key}=${this._prepareCondition(value)}`;
+            }).join(` AND `);
+        }
+        return ``;
     }
 
     _prepareFields(fields) {
@@ -32,68 +47,6 @@ class Sql {
         return `* `;
     }
 
-    _prepareCondition(condition) {
-        if (typeof condition === 'string') {
-            return condition;
-        } else if (Array.isArray(condition)) {
-            const key = _.first(condition.splice(0, 1));
-            switch(key) {
-                case `OR`: 
-                    return `(` + _.map(condition, this._prepareCondition.bind(this)).join(` OR `) + `)`;
-                case `AND`: 
-                    return `(` + _.map(condition, this._prepareCondition.bind(this)).join(` AND `) + `)`;
-                case `NOT`: 
-                    return `NOT (${_.first(condition)})`;
-                default:
-                    throw new Error(`Ivalid sql: ${key}`)
-            }
-        } else if (condition instanceof Object) {
-            return _.map(condition, (value, key) => {
-                return `${key}=${this._prepareCondition(value)}`;
-            }).join(` AND `);
-        }
-        return ``;
-    }
-
-    _prepareValues(data) {
-        switch (this._type) {
-        case types.insert:
-            return ` (${Object.keys(data).join()}) VALUES (${Object.values(data).join()})`;
-        case types.update:
-            return ` SET ` + _.map(data, (value, key) => {
-                return `${key}=${value}`;
-            });
-        default:
-            throw new Error(`Invalid sql type:${this._type}`);
-        }
-    }
-
-    static select(fields, tableName) {
-        const instance = new Sql(types.select);
-        instance._fields = instance._prepareFields(fields);
-        if (tableName) {
-            return instance.table(tableName);
-        }
-        return instance;
-    }
-
-    static insert(tableName, data) {
-        const instance = new Sql(types.insert);
-        instance._values = instance._prepareValues(data);
-        return instance.table(tableName);
-    }
-
-    static update(tableName, data) {
-        const instance = new Sql(types.update);
-        instance._values = instance._prepareValues(data);
-        return instance.table(tableName);
-    }
-
-    static delete(tableName) {
-        const instance = new Sql(types.delete);
-        return instance.table(tableName);
-    }
-
     table(tableName) {
         this._tableName = tableName;
         return this;
@@ -104,33 +57,7 @@ class Sql {
         return this;
     }
 
-    sql() {
-        const sql = [];
-        switch (this._type) {
-        case types.select:
-            sql.push(`${this._type} ${this._fields}`);
-            sql.push(`FROM ${this._tableName}`);
-            sql.push(this._condition);
-            break;
-        case types.insert:
-            sql.push(`${this._type} `);
-            sql.push(`INTO ${this._tableName}`);
-            sql.push(this._values);
-            break;
-        case types.update:
-            sql.push(`${this._type} ${this._fields}`);
-            sql.push(`${this._tableName}`);
-            sql.push(this._values);
-            sql.push(this._condition);
-            break;
-        case types.delete:
-            sql.push(`${this._type} `);
-            sql.push(`FROM ${this._tableName}`);
-            sql.push(this._condition);
-            break;
-        default:
-            throw new Error(`Invalid sql type:${this._type}`);
-        }
+    _prepareSql(sql) {
         sql.push(';');
         this._reset();
         return sql.join('');
@@ -141,9 +68,87 @@ class Sql {
     }
 }
 
+class Select extends Sql {
+    from(tableName) {
+        this.table(tableName);
+    }
+
+    static create(fields, tableName) {
+        const instance = new Select();
+        instance._fields = instance._prepareFields(fields);
+        if (tableName) {
+            return instance.table(tableName);
+        }
+        return instance;
+    }
+
+    sql() {
+        const sql = [];
+        sql.push(`SELECT ${this._fields}`);
+        sql.push(`FROM ${this._tableName}`);
+        sql.push(this._condition);
+        return this._prepareSql(sql);
+    }
+}
+
+class Insert extends Sql {
+    static create(tableName, data) {
+        const instance = new Insert();
+        instance._values = instance._prepareValues(data);
+        return instance.table(tableName);
+    }
+
+    _prepareValues(data) {
+        return ` (${Object.keys(data).join()}) VALUES (${Object.values(data).join()})`;
+    }
+
+    sql() {
+        const sql = [];
+        sql.push(`INSERT INTO ${this._tableName}`);
+        sql.push(this._values);
+        return this._prepareSql(sql);
+    }
+}
+
+class Update extends Sql {
+    static create(tableName, data) {
+        const instance = new Update();
+        instance._values = instance._prepareValues(data);
+        return instance.table(tableName);
+    }
+
+    _prepareValues(data) {
+        return ` SET ` + _.map(data, (value, key) => {
+            return `${key}=${value}`;
+        });
+    }
+
+    sql() {
+        const sql = [];
+        sql.push(`UPDATE ${this._fields}`);
+        sql.push(`${this._tableName}`);
+        sql.push(this._values);
+        sql.push(this._condition);
+        return this._prepareSql(sql);
+    }
+}
+class Delete extends Sql {
+    static create(tableName) {
+        const instance = new Delete();
+        return instance.table(tableName);
+    }
+
+    sql() {
+        const sql = [];
+        sql.push(`DELETE FROM ${this._tableName}`);
+        sql.push(this._condition);
+        return this._prepareSql(sql);
+    }
+}
+
 module.exports = {
-    select: Sql.select,
-    update: Sql.update,
-    delete: Sql.delete,
-    insert: Sql.insert
+    select: Select.create,
+    update: Update.create,
+    delete: Delete.create,
+    insert: Insert.create
 };
