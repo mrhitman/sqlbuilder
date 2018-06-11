@@ -4,14 +4,8 @@ const _ = require("lodash");
 
 class Sql {
     constructor() {
-        this._reset();
-    }
-
-    _reset() {
-        this._fields = '';
-        this._tableName = '';
-        this._values = '';
-        this._condition = '';
+        this._tableName = ``;
+        this._condition = ``;
     }
 
     _prepareCondition(condition) {
@@ -58,13 +52,8 @@ class Sql {
     }
 
     _prepareSql(sql) {
-        sql.push(';');
-        this._reset();
+        sql.push(`;`);
         return sql.join('');
-    }
-
-    toString() {
-        return this.sql();
     }
 }
 
@@ -90,8 +79,12 @@ class Select extends Sql {
         return this._prepareSql(sql);
     }
 }
-
 class Insert extends Sql {
+    constructor() {
+        super();
+        this.conflict = ``;
+    }
+
     static create(tableName, data) {
         const instance = new Insert();
         instance._values = instance._prepareValues(data);
@@ -102,14 +95,26 @@ class Insert extends Sql {
         return ` (${Object.keys(data).join()}) VALUES (${Object.values(data).join()})`;
     }
 
+    onConflict(fields, updateSet) {
+        if (Array.isArray(fields)) {
+            this.conflict = ` ON CONFLICT (${fields.join()})`;
+        } else {
+            this.conflict = ` ON CONFLICT (${fields})`;
+        }
+        this.conflict += ` DO UPDATE SET ` + _.map(updateSet, (value, key) => {
+            return `${key}=${value}`;
+        });
+        return this;
+    }
+
     sql() {
         const sql = [];
         sql.push(`INSERT INTO ${this._tableName}`);
         sql.push(this._values);
+        sql.push(this.conflict);
         return this._prepareSql(sql);
     }
 }
-
 class Update extends Sql {
     static create(tableName, data) {
         const instance = new Update();
@@ -125,8 +130,7 @@ class Update extends Sql {
 
     sql() {
         const sql = [];
-        sql.push(`UPDATE ${this._fields}`);
-        sql.push(`${this._tableName}`);
+        sql.push(`UPDATE ${this._tableName}`);
         sql.push(this._values);
         sql.push(this._condition);
         return this._prepareSql(sql);

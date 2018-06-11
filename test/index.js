@@ -39,7 +39,7 @@ describe('select', function() {
             .equal(sql.select(['id', 'field1'], 'test').where({id: ':id', name: ':name'}).sql());
         expect('SELECT id, field1 FROM test WHERE NOT (id=:id);')
             .to.be
-            .equal(sql.select(['id', 'field1'], 'test').where(['NOT',  'id=:id']).sql());
+            .equal(sql.select(['id', 'field1'], 'test').where(['NOT', 'id=:id']).sql());
         expect('SELECT id FROM test WHERE (id=1 OR id=2);')
             .to.be
             .equal(sql.select('id', 'test').where(['OR', 'id=1', 'id=2']).sql());
@@ -55,11 +55,10 @@ describe('select', function() {
         expect("SELECT raw_data FROM sso_service_lines WHERE (portal_id=:portal_id AND (created_at > NOW() - INTERVAL '1 minute' OR updated_at > NOW() - INTERVAL '1 minute'));")
             .to.be
             .equal(sql.select('raw_data', 'sso_service_lines')
-                .where(
-                    ['AND', 'portal_id=:portal_id',
-                        ['OR', "created_at > NOW() - INTERVAL '1 minute'", "updated_at > NOW() - INTERVAL '1 minute'"]
-                    ]
-                ).sql());
+                .where([
+                    'AND', 'portal_id=:portal_id',
+                    ['OR', "created_at > NOW() - INTERVAL '1 minute'", "updated_at > NOW() - INTERVAL '1 minute'"]
+                ]).sql());
     });
 });
 
@@ -94,5 +93,23 @@ describe('update', function() {
         expect('UPDATE test SET id=:id WHERE name=:name;')
             .to.be
             .equal(sql.update('test', {id: ':id'}).where({name: ':name'}).sql());
+    });
+
+});
+
+describe('insert', function() {
+    it('simple', function() {
+        expect('INSERT INTO test (id) VALUES (:id);')
+            .to.be
+            .equal(sql.insert('test', {id: ':id'}).sql());
+    });
+
+    it('conflict', function() {
+        expect('INSERT INTO test (id,name) VALUES (:id,:name) ON CONFLICT (id) DO UPDATE SET name=:name;')
+            .to.be
+            .equal(sql
+                .insert('test', {id: ':id', name: ':name'})
+                .onConflict('id', {name: ':name'})
+                .sql());
     });
 });
