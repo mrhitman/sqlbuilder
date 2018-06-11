@@ -56,7 +56,6 @@ class Sql {
         return sql.join('');
     }
 }
-
 class Select extends Sql {
     from(tableName) {
         this.table(tableName);
