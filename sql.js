@@ -58,7 +58,7 @@ class Sql {
 }
 class Select extends Sql {
     from(tableName) {
-        this.table(tableName);
+        return this.table(tableName);
     }
 
     static create(fields, tableName) {
