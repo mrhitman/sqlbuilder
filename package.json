@@ -15,7 +15,8 @@
   "devDependencies": {},
   "scripts": {
     "test": "mocha",
-    "test-cov": "jscoverage lib lib-cov; MS_COV=1 ./node_modules/.bin/mocha -R html-cov > coverage.html"
+    "test-cov": "jscoverage lib lib-cov; MS_COV=1 ./node_modules/.bin/mocha -R html-cov > coverage.html",
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
   },
   "repository": {
     "type": "git",
