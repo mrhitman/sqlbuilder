@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/mrhitman/sqlbuilder/badge.svg?branch=master)](https://coveralls.io/github/mrhitman/sqlbuilder?branch=master)
+![Build Status](https://travis-ci.org/mrhitman/sqlbuilder.svg?branch=master)
 ## select
 ```
     select().from('test').where('id=:id').sql(); 
