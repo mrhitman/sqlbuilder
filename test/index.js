@@ -49,6 +49,10 @@ describe('select', function() {
         expect('SELECT id FROM test WHERE (id=1 OR (id=3 OR id=2));')
             .to.be
             .equal(sql.select('id', 'test').where(['OR', 'id=1', ['OR', 'id=3', 'id=2']]).sql());
+        expect('SELECT * FROM test WHERE 1=1;')
+            .to.be
+            .equal(sql.select().from('test').where(1).sql());
+        expect(sql.select('id', 'test').where(['XOR', 'id=1']).sql()).to.throw('Invalid sql: XOR');
     });
 
     it('real', function() {

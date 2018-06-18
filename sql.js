@@ -21,14 +21,14 @@ class Sql {
             case `NOT`:
                 return `NOT (${_.first(condition)})`;
             default:
-                throw new Error(`Ivalid sql: ${key}`);
+                throw new Error(`Invalid sql: ${key}`);
             }
         } else if (condition instanceof Object) {
             return _.map(condition, (value, key) => {
                 return `${key}=${this._prepareCondition(value)}`;
             }).join(` AND `);
         }
-        return ``;
+        return `1=1`;
     }
 
     _prepareFields(fields) {
