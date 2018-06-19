@@ -7,7 +7,7 @@ class Sql {
     protected _tableName: string;
     protected _condition: string;
 
-    _prepareCondition(condition: Condition) {
+    _prepareCondition(condition: Condition): string {
         if (typeof condition === 'string') {
             return condition;
         } else if (Array.isArray(condition)) {
@@ -30,7 +30,7 @@ class Sql {
         return `1=1`;
     }
 
-    _prepareFields(fields: Fields) {
+    _prepareFields(fields: Fields): string {
         if (typeof fields === 'string') {
             return `${fields} `;
         }
@@ -50,7 +50,7 @@ class Sql {
         return this;
     }
 
-    _prepareSql(sql) {
+    _prepareSql(sql): string {
         sql.push(`;`);
         return sql.join('');
     }
@@ -63,7 +63,7 @@ class Select extends Sql {
         return this.table(tableName);
     }
 
-    static create(fields, tableName) {
+    static create(fields: Fields, tableName: string) {
         const instance = new Select();
         instance._fields = instance._prepareFields(fields);
         if (tableName) {
@@ -72,7 +72,7 @@ class Select extends Sql {
         return instance;
     }
 
-    sql() {
+    sql(): string {
         const sql = [];
         sql.push(`SELECT ${this._fields}`);
         sql.push(`FROM ${this._tableName}`);
@@ -85,13 +85,13 @@ class Insert extends Sql {
     protected _conflict: string = ``;
     protected _values: string;
 
-    static create(tableName, data) {
+    static create(tableName: string, data) {
         const instance = new Insert();
         instance._values = instance._prepareValues(data);
         return instance.table(tableName);
     }
 
-    _prepareValues(data) {
+    _prepareValues(data: Object): string {
         return ` (${Object.keys(data).join()}) VALUES (${Object.values(data).join()})`;
     }
 
@@ -107,7 +107,7 @@ class Insert extends Sql {
         return this;
     }
 
-    sql() {
+    sql(): string {
         const sql = [];
         sql.push(`INSERT INTO ${this._tableName}`);
         sql.push(this._values);
@@ -119,8 +119,9 @@ class Insert extends Sql {
 class InsertBatch extends Sql {
     protected _fields: string;
     protected _values: string;
+    protected _args = [];
 
-    static create(tableName, fields, data) {
+    static create(tableName: string, fields: Fields, data) {
         const instance = new InsertBatch();
         instance._fields = instance._prepareFields(fields).trim();
         instance._values = instance._prepareValues(data);
@@ -129,6 +130,7 @@ class InsertBatch extends Sql {
 
     _prepareValues(data) {
         let totalValues = 0;
+        this._args = data;
         return data.map((values, index) => {
             const result = `(:${range(totalValues, totalValues + values.length).join(',:')})`;
             totalValues += values.length;
@@ -143,13 +145,17 @@ class InsertBatch extends Sql {
         sql.push(`VALUES ${this._values}`);
         return this._prepareSql(sql);
     }
+
+    all() {
+        return [this.sql(), this._args];
+    }
 }
 
 class Update extends Sql {
     protected _values: string;
     protected _condition: string;
 
-    static create(tableName, data) {
+    static create(tableName: string, data) {
         const instance = new Update();
         instance._values = instance._prepareValues(data);
         return instance.table(tableName);

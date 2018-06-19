@@ -130,5 +130,10 @@ describe('insert', function() {
         expect('INSERT INTO test (id,name) VALUES (:0,:1),(:2,:3),(:4,:5);')
             .to.be
             .equal(sql.insertBatch('test', ['id', 'name'], [[1, 'test1'], [2, 'test2'], [3, 'test3']]).sql());
+
+        const args = [[1, 'test1'], [2, 'test2'], [3, 'test3']];
+        expect(['INSERT INTO test (id,name) VALUES (:0,:1),(:2,:3),(:4,:5);', args])
+            .to.be.deep
+            .equal(sql.insertBatch('test', ['id', 'name'], args).all());
     });
 });
