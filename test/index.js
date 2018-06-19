@@ -116,11 +116,16 @@ describe('insert', function() {
                 .insert('test', {id: ':id', name: ':name'})
                 .onConflict('id', {name: ':name'})
                 .sql());
-        expect('INSERT INTO test (id,name) VALUES (:id,:name) ON CONFLICT (id) DO UPDATE SET name=:name;')
+        expect('INSERT INTO test (id,name) VALUES (:id,:name) ON CONFLICT (id,date) DO UPDATE SET name=:name;')
             .to.be
             .equal(sql
                 .insert('test', {id: ':id', name: ':name'})
-                .onConflict(['id'], {name: ':name'})
+                .onConflict(['id', 'date'], {name: ':name'})
                 .sql());
+    });
+    it('batch', function() {
+        expect('INSERT INTO test (id,name) VALUES (:0,:1), (:2,:3), (:4,:5)')
+            .to.be
+            .equal(sql.insertBatch('test', ['id', 'name'], [[1, 'test1'], [2, 'test2'], [3, 'test3']]).sql())
     });
 });

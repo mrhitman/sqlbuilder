@@ -56,6 +56,7 @@ class Sql {
         return sql.join('');
     }
 }
+
 class Select extends Sql {
     from(tableName) {
         return this.table(tableName);
@@ -78,6 +79,7 @@ class Select extends Sql {
         return this._prepareSql(sql);
     }
 }
+
 class Insert extends Sql {
     constructor() {
         super();
@@ -114,6 +116,32 @@ class Insert extends Sql {
         return this._prepareSql(sql);
     }
 }
+
+class InsertBatch extends Insert {
+    static create(tableName, fields, data) {
+        const instance = new InsertBatch();
+        instance._fields = instance._prepareFields(fields).trim();
+        instance._values = instance._prepareValues(data)
+        return instance.table(tableName);
+    }
+
+    _prepareValues(data) {
+        return data.map((values, index) => {
+            return `(${values.join()})`;
+        });
+    }
+
+    sql() {
+        const sql = [];
+        sql.push(`INSERT INTO ${this._tableName} `);
+        sql.push(`(${this._fields}) `);
+        sql.push(`VALUES ${this._values}`);
+        
+        sql.push(this.conflict);
+        return this._prepareSql(sql);
+    }
+}
+
 class Update extends Sql {
     static create(tableName, data) {
         const instance = new Update();
@@ -135,6 +163,7 @@ class Update extends Sql {
         return this._prepareSql(sql);
     }
 }
+
 class Delete extends Sql {
     static create(tableName) {
         const instance = new Delete();
@@ -153,5 +182,6 @@ module.exports = {
     select: Select.create,
     update: Update.create,
     delete: Delete.create,
-    insert: Insert.create
+    insert: Insert.create,
+    insertBatch: InsertBatch.create
 };
