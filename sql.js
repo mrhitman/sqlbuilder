@@ -36,7 +36,7 @@ class Sql {
             return `${fields} `;
         }
         if (Array.isArray(fields)) {
-            return `${fields.join(', ')} `;
+            return `${fields.join(',')} `;
         }
         return `* `;
     }
@@ -121,13 +121,16 @@ class InsertBatch extends Insert {
     static create(tableName, fields, data) {
         const instance = new InsertBatch();
         instance._fields = instance._prepareFields(fields).trim();
-        instance._values = instance._prepareValues(data)
+        instance._values = instance._prepareValues(data);
         return instance.table(tableName);
     }
 
     _prepareValues(data) {
+        let totalValues = 0;
         return data.map((values, index) => {
-            return `(${values.join()})`;
+            const result = `(:${_.range(totalValues, totalValues + values.length).join(',:')})`;
+            totalValues += values.length;
+            return result;
         });
     }
 
@@ -136,7 +139,7 @@ class InsertBatch extends Insert {
         sql.push(`INSERT INTO ${this._tableName} `);
         sql.push(`(${this._fields}) `);
         sql.push(`VALUES ${this._values}`);
-        
+
         sql.push(this.conflict);
         return this._prepareSql(sql);
     }

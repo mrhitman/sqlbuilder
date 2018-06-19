@@ -16,28 +16,28 @@ describe('select', function() {
     });
 
     it('fields', function() {
-        expect('SELECT id, field FROM test;')
+        expect('SELECT id,field FROM test;')
             .to.be
             .equal(sql.select(['id', 'field']).table('test').sql());
-        expect('SELECT id, field FROM test;')
+        expect('SELECT id,field FROM test;')
             .to.be
-            .equal(sql.select('id, field').table('test').sql());
-        expect('SELECT id, field FROM test;')
+            .equal(sql.select('id,field').table('test').sql());
+        expect('SELECT id,field FROM test;')
             .to.be
-            .equal(sql.select('id, field', 'test').sql());
+            .equal(sql.select('id,field', 'test').sql());
     });
 
     it('where', function() {
-        expect('SELECT id, field1 FROM test WHERE id=:id;')
+        expect('SELECT id,field1 FROM test WHERE id=:id;')
             .to.be
             .equal(sql.select(['id', 'field1'], 'test').where('id=:id').sql());
-        expect('SELECT id, field1 FROM test WHERE id=:id;')
+        expect('SELECT id,field1 FROM test WHERE id=:id;')
             .to.be
             .equal(sql.select(['id', 'field1'], 'test').where({id: ':id'}).sql());
-        expect('SELECT id, field1 FROM test WHERE id=:id AND name=:name;')
+        expect('SELECT id,field1 FROM test WHERE id=:id AND name=:name;')
             .to.be
             .equal(sql.select(['id', 'field1'], 'test').where({id: ':id', name: ':name'}).sql());
-        expect('SELECT id, field1 FROM test WHERE NOT (id=:id);')
+        expect('SELECT id,field1 FROM test WHERE NOT (id=:id);')
             .to.be
             .equal(sql.select(['id', 'field1'], 'test').where(['NOT', 'id=:id']).sql());
         expect('SELECT id FROM test WHERE (id=1 OR id=2);')
@@ -52,7 +52,10 @@ describe('select', function() {
         expect('SELECT * FROM test WHERE 1=1;')
             .to.be
             .equal(sql.select().from('test').where(1).sql());
-        expect(() => sql.select('id', 'test').where(['XOR', 'id=1']).sql())
+        expect(() => {
+            return sql.select('id', 'test').where(['XOR', 'id=1']).sql()
+            ;
+        })
             .to.throw('Invalid sql: XOR');
     });
 
@@ -124,8 +127,8 @@ describe('insert', function() {
                 .sql());
     });
     it('batch', function() {
-        expect('INSERT INTO test (id,name) VALUES (:0,:1), (:2,:3), (:4,:5)')
+        expect('INSERT INTO test (id,name) VALUES (:0,:1),(:2,:3),(:4,:5);')
             .to.be
-            .equal(sql.insertBatch('test', ['id', 'name'], [[1, 'test1'], [2, 'test2'], [3, 'test3']]).sql())
+            .equal(sql.insertBatch('test', ['id', 'name'], [[1, 'test1'], [2, 'test2'], [3, 'test3']]).sql());
     });
 });
