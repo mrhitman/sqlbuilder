@@ -3,7 +3,7 @@
 /*global describe, it*/
 
 const expect = require('chai').expect;
-const sql = require('../sql');
+const sql = require('../dist/sql');
 
 describe('select', function() {
     it('simple', function() {

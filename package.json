@@ -1,8 +1,6 @@
 {
   "dependencies": {
-    "chai": "^4.1.2",
-    "lodash": "^4.17.10",
-    "mocha": "^5.2.0"
+    "lodash": "^4.17.10"
   },
   "name": "sqlbuilder",
   "version": "1.0.0",
@@ -11,8 +9,11 @@
     "test": "test"
   },
   "devDependencies": {
-    "flow": "^0.2.3",
-    "istanbul": "^0.4.5"
+    "@types/lodash": "^4.14.110",
+    "chai": "^4.1.2",
+    "istanbul": "^0.4.5",
+    "mocha": "^5.2.0",
+    "typescript": "^2.9.2"
   },
   "scripts": {
     "test": "mocha",
