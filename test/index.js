@@ -52,7 +52,8 @@ describe('select', function() {
         expect('SELECT * FROM test WHERE 1=1;')
             .to.be
             .equal(sql.select().from('test').where(1).sql());
-        expect(sql.select('id', 'test').where(['XOR', 'id=1']).sql()).to.throw('Invalid sql: XOR');
+        expect(() => sql.select('id', 'test').where(['XOR', 'id=1']).sql())
+            .to.throw('Invalid sql: XOR');
     });
 
     it('real', function() {
@@ -114,6 +115,12 @@ describe('insert', function() {
             .equal(sql
                 .insert('test', {id: ':id', name: ':name'})
                 .onConflict('id', {name: ':name'})
+                .sql());
+        expect('INSERT INTO test (id,name) VALUES (:id,:name) ON CONFLICT (id) DO UPDATE SET name=:name;')
+            .to.be
+            .equal(sql
+                .insert('test', {id: ':id', name: ':name'})
+                .onConflict(['id'], {name: ':name'})
                 .sql());
     });
 });
